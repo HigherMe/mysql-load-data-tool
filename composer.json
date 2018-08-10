@@ -10,7 +10,7 @@
   },
   "autoload": {
     "psr-4": {
-      "ItsMill3rTime": "src/"
+      "ItsMill3rTime\\": "src/"
     }
   }
 }
