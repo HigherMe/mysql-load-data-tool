@@ -50,7 +50,6 @@ class MySQLFileTool
         $this->_table = $table;
         $this->_keys = $keys;
         $this->_chunk_size = $chunk_size;
-
     }
 
     /**
@@ -97,6 +96,8 @@ class MySQLFileTool
                 dump('file: ' . $file . ' failed' . $exception);
             }
         }
+
+        $this->reset();
     }
 
     /**
@@ -131,5 +132,16 @@ class MySQLFileTool
     private function destroyFile($file)
     {
         @unlink($file);
+    }
+
+    /**
+     *
+     */
+    public function reset()
+    {
+        $this->_files = [];
+        $this->_active_file = null;
+        $this->_current_index = 0;
+        $this->_active_file_reference = null;
     }
 }
