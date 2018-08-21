@@ -39,17 +39,20 @@ class MySQLFileTool
      */
     protected $_keys;
 
+    protected $_mode = null;
+
     /**
      * MySQLFileTool constructor.
      * @param $table
      * @param $keys
      * @param $chunk_size
      */
-    public function __construct($table, $keys, $chunk_size)
+    public function __construct($table, $keys, $chunk_size, $mode)
     {
         $this->_table = $table;
         $this->_keys = $keys;
         $this->_chunk_size = $chunk_size;
+        $this->_mode = $mode;
     }
 
     /**
@@ -89,7 +92,13 @@ class MySQLFileTool
         }
         foreach ($this->_files as $file) {
             try {
-                \DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '" . $file . "' INTO TABLE " . $this->_table . " FIELDS TERMINATED BY '|||' (" . implode(",", $this->_keys) . ")");
+                if ($this->_mode === 'replace') {
+                    \DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '" . $file . "' REPLACE INTO TABLE " . $this->_table . " FIELDS TERMINATED BY '|||' (" . implode(",", $this->_keys) . ")");
+                } elseif ($this->_mode === 'ignore') {
+                    \DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '" . $file . "' IGNORE INTO TABLE " . $this->_table . " FIELDS TERMINATED BY '|||' (" . implode(",", $this->_keys) . ")");
+                } else {
+                    \DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '" . $file . "' INTO TABLE " . $this->_table . " FIELDS TERMINATED BY '|||' (" . implode(",", $this->_keys) . ")");
+                }
                 $this->destroyFile($file);
             } catch (\Exception $exception) {
                 //keep failed file for review
@@ -105,6 +114,12 @@ class MySQLFileTool
      */
     public function addRow(array $row_fields_data)
     {
+        foreach ($row_fields_data as $key => $value) {
+            if (is_null($value)) {
+                $row_fields_data[$key] = '\N';
+            }
+        }
+
         $row = implode('|||', $row_fields_data);
         fputs($this->_active_file_reference, $row . PHP_EOL);
         $this->_current_index++;
@@ -117,6 +132,11 @@ class MySQLFileTool
     {
         $complete_string = '';
         foreach ($rows as $row_fields_data) {
+            foreach ($row_fields_data as $key => $value) {
+                if (is_null($value)) {
+                    $row_fields_data[$key] = '\N';
+                }
+            }
             $row = implode('|||', $row_fields_data);
             $complete_string .= $row . PHP_EOL;
         }
