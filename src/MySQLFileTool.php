@@ -47,7 +47,7 @@ class MySQLFileTool
      * @param $keys
      * @param $chunk_size
      */
-    public function __construct($table, $keys, $chunk_size, $mode)
+    public function __construct($table, $keys, $chunk_size, $mode = null)
     {
         $this->_table = $table;
         $this->_keys = $keys;
